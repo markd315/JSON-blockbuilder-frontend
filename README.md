@@ -1,6 +1,9 @@
 JSONLogic Editor
 ==============
-Built complex rules authomatically by JSONLogic editor utilizing Blockly. All supported operations in JSONLogic structure are provided by Blockly blocks. Drag and drop blocks to make your own rule.
+Built complex json bodies automatically by JSONLogic editor utilizing Blockly and json-schema. All supported operations in JSONLogic structure are provided by Blockly blocks. 
+
+Configure the data models that your API accepts, and the relationships between different endpoints.
+Then, users can just drag and drop schema-compliant blocks to wire together and send multiple API requests at once.
 
 References:
 
@@ -9,3 +12,5 @@ References:
 2- https://github.com/ens-lg4/MenulyJSON
 
 3- http://jsonlogic.com/
+
+4- Direct forked from https://github.com/katirasole/JSONLogic-Editor
