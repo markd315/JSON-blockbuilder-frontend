@@ -1,6 +1,39 @@
 'use strict';
 
 Blockly.JSON = new Blockly.Generator('JSON');
+//TODO add additional validations for these custom schemas later.
+function loadCustomSchemaMappers(){
+  let xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      const regex = /<a href=".*">(.*)\.json<\/a>/gm;
+      let m;
+      while ((m = regex.exec(this.responseText)) !== null) {
+        // This is necessary to avoid infinite loops with zero-width matches
+        if (m.index === regex.lastIndex) {
+          regex.lastIndex++;
+        }
+        // The result can be accessed through the `m`-variable.
+        m.forEach((match, groupIndex) => {
+          if(groupIndex == 1){
+            Blockly.JSON[`${match}`] = function(block) {
+                var dictionary = {};
+                for(var i = 0; i<block.length; i++) {
+                    var pair_key    = block.getFieldValue( 'key_field_'+i );
+                    var pair_value  = this.generalBlockToObj( block.getInputTargetBlock( 'element_'+i ) );
+                    dictionary[pair_key] = pair_value;
+                }
+                return dictionary;
+            };
+          }
+        });
+      }
+    }
+  };
+  xhttp.open("GET", 'http://localhost:8888/schema/', true);
+  xhttp.send();
+}
+loadCustomSchemaMappers();
 //-------------------------------------------------------------------------------------------------
 Blockly.JSON.fromWorkspace = function(workspace) {
     var json_text = '';

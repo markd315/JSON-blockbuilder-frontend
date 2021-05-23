@@ -36,6 +36,74 @@ Blockly.FieldDropdown.prototype.setValue = function(newValue) {      // Allow th
   }
 };
 
+Blockly.Input.prototype.appendChild = function(allowedBlock, presenceLabel, absenceLabel) {
+
+    var presenceLabel   = presenceLabel || this.name;
+    var absenceLabel    = absenceLabel  || 'no '+this.name;
+    var ddl_name        = 'ddl_'+this.name;
+
+    var dd_list = [
+        [ absenceLabel, allowedBlock, absenceLabel]
+    ];
+    dd_list.push( [presenceLabel+': ', allowedBlock, presenceLabel ] );
+
+    var this_input = this;
+
+    this
+        .setAlign( this.type == Blockly.INPUT_VALUE ? Blockly.ALIGN_RIGHT : Blockly.ALIGN_LEFT)
+        .appendField(new Blockly.FieldTextbutton(allowedBlock, function() {
+                    return this.sourceBlock_.toggleTargetBlock(this_input, allowedBlock);
+                }
+        ), ddl_name);
+    this_input.sourceBlock_.toggleTargetBlockCustom(this_input, allowedBlock, this.sourceBlock_.workspace);
+    return this;
+};
+
+Blockly.Input.prototype.appendOptionalFieldsSelector = function(schema, allowedBlocks, presenceLabel, absenceLabel) {
+    if(allowedBlocks.length < 1){
+        return;
+    }
+    var presenceLabel   = presenceLabel || this.name;
+    var absenceLabel    = absenceLabel  || 'no '+this.name;
+    var ddl_name        = 'ddl_'+this.name;
+
+    var dd_list = [
+        [ absenceLabel, ':REMOVE', absenceLabel]
+    ];
+    for(var i = 0; i < allowedBlocks.length; i++) {
+        dd_list.push( [allowedBlocks[i], allowedBlocks[i], presenceLabel ] );
+    }
+    let appendKeyValuePairInput = function(rootInput, name) {
+        var lastIndex = rootInput.length++;
+        var appended_input = rootInput.appendValueInput('element_'+lastIndex);
+        appended_input.appendField(new Blockly.FieldTextbutton('–', function() { this.sourceBlock_.deleteKeyValuePairInput(appended_input); }) )
+            .appendField(new Blockly.FieldLabel(name), 'key_field_'+lastIndex)
+            .appendField( Blockly.keyValueArrow() );
+
+        rootInput.moveInputBefore('element_'+lastIndex);
+
+        return appended_input;
+    }
+    var this_input = this;
+    this
+        .setAlign( this.type == Blockly.INPUT_VALUE ? Blockly.ALIGN_RIGHT : Blockly.ALIGN_LEFT)
+        .appendField(new Blockly.FieldDropdown( dd_list, function(property) {
+                    var targetType = schema.properties[property].type;
+                    if(targetType == undefined){
+                        targetType = schema.properties[property]['$ref'].replace(".json", "");
+                    }
+                    if(targetType == 'integer'){
+                        targetType = 'number';
+                    }
+                    //Need to spawn the new connector first, then attach this.
+                    let tmp = appendKeyValuePairInput(this_input.sourceBlock_, property);
+                    return tmp.appendChild(targetType, Blockly.selectionArrow(), 'null');
+                }
+        ), ddl_name);
+
+    return this;
+};
+
 
 Blockly.Input.prototype.appendSelector = function(allowedBlocks, presenceLabel, absenceLabel) {
 
@@ -67,9 +135,21 @@ Blockly.Input.prototype.appendSelector = function(allowedBlocks, presenceLabel, 
     return this;
 };
 
+Blockly.Block.prototype.toggleTargetBlockCustom = function(input, targetType, workspace) {     // universal version: can create any type of targetBlocks
+    var targetBlock = input ? this.getInputTargetBlock(input.name) : this.getNextBlock();      // named input or next  // add a new kind of block:
+    targetBlock = Blockly.Block.obtain(workspace, targetType);
+    targetBlock.initSvg();
+    targetBlock.render();
+    input.sourceBlock_.initSvg();
+    input.sourceBlock_.render();
+
+    var parentConnection = input ? this.getInput(input.name).connection : this.nextConnection;     // named input or next
+    var childConnection = targetBlock.outputConnection || targetBlock.previousConnection;  // vertical or horizontal
+    parentConnection.connect(childConnection);
+};
+
 
 Blockly.Block.prototype.toggleTargetBlock = function(input, targetType) {     // universal version: can create any type of targetBlocks
-
     var targetBlock = input ? this.getInputTargetBlock(input.name) : this.getNextBlock();              // named input or next
     if( targetType==':REMOVE' ) {
         if(targetBlock) {
@@ -122,11 +202,16 @@ var original_connect = Blockly.Connection.prototype.connect;
 
 Blockly.Connection.prototype.connect = function(otherConnection) {
 
-    original_connect.call(this, otherConnection);
-
-    var parentConnection = this.isSuperior() ? this : otherConnection;  // since connect() is symmetrical we never know which way it is called
-
-    parentConnection.getInput().updateLinkedDDL();
+    try{
+        original_connect.call(this, otherConnection);
+        var parentConnection = this.isSuperior() ? this : otherConnection;  // since connect() is symmetrical we never know which way it is called
+        parentConnection.getInput().updateLinkedDDL();
+    }catch(e){
+        let disconnectedBlock = otherConnection.sourceBlock_;
+        if(disconnectedBlock.parentBlock_ == null){
+            disconnectedBlock.dispose(true, true);
+        }
+    }
 };
 
 
