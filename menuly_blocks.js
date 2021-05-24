@@ -16,7 +16,7 @@ function appendElementInput(that) {
         var lastIndex = that.length++;
 
         var appended_input = that.appendValueInput('element_'+lastIndex);
-        appended_input.appendField(new Blockly.FieldTextbutton('–', function() { that.deleteElementInput(appended_input); }) )
+        appended_input.appendField(new Blockly.FieldLabel('–', function() { that.deleteElementInput(appended_input); }) )
           .appendSelector(selectorBlocks, Blockly.selectionArrow(), 'null');
           
         that.moveInputBefore('element_'+lastIndex);
@@ -200,7 +200,7 @@ Blockly.Blocks['dictionary'] = {
 
     this.appendDummyInput('open_bracket')
         .appendField(" Dictionary ")
-        .appendField(new Blockly.FieldTextbutton('+', function() { this.sourceBlock_.appendKeyValuePairInput(); }) );
+        .appendField(new Blockly.FieldLabel('+', function() { this.sourceBlock_.appendKeyValuePairInput(); }) );
 
     this.setInputsInline(false);
   },
@@ -209,7 +209,7 @@ Blockly.Blocks['dictionary'] = {
 
         var lastIndex = this.length++;
         var appended_input = this.appendValueInput('element_'+lastIndex);
-        appended_input.appendField(new Blockly.FieldTextbutton('–', function() { this.sourceBlock_.deleteKeyValuePairInput(appended_input); }) )
+        appended_input.appendField(new Blockly.FieldLabel('–', function() { this.sourceBlock_.deleteKeyValuePairInput(appended_input); }) )
             .appendField(new Blockly.FieldTextInput('key_'+lastIndex), 'key_field_'+lastIndex)
             .appendField( Blockly.keyValueArrow() )
             .appendSelector(selectorBlocks, Blockly.selectionArrow(), 'null');
@@ -372,7 +372,7 @@ Blockly.Blocks['dynarray'] = {
 
     this.appendDummyInput('open_bracket')
         .appendField(" Dynamic Type Array ")
-        .appendField(new Blockly.FieldTextbutton('+', function() { this.sourceBlock_.appendElementInput(); }) );
+        .appendField(new Blockly.FieldLabel('+', function() { this.sourceBlock_.appendElementInput(); }) );
 
     this.setInputsInline(false);
   },

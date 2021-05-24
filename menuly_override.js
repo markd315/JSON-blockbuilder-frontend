@@ -22,20 +22,6 @@ Blockly.Block.prototype.onMouseUp_ = function(e) {
 };
 
 
-Blockly.FieldDropdown.prototype.setValue = function(newValue) {      // Allow the label on the closed menu to differ from values of the open menu
-  this.value_ = newValue;
-  // Look up and display the human-readable text.
-  var options = this.getOptions_();
-  for(var x = 0; x < options.length; x++) {
-    // Options are tuples of human-readable text and language-neutral values.
-    if (options[x][1] == newValue) {
-      var shortValue = options[x][2] || options[x][0];
-      this.setText(shortValue);
-      return;
-    }
-  }
-};
-
 Blockly.Input.prototype.appendChild = function(allowedBlock, presenceLabel, absenceLabel) {
 
     var presenceLabel   = presenceLabel || this.name;
@@ -51,7 +37,7 @@ Blockly.Input.prototype.appendChild = function(allowedBlock, presenceLabel, abse
 
     this
         .setAlign( this.type == Blockly.INPUT_VALUE ? Blockly.ALIGN_RIGHT : Blockly.ALIGN_LEFT)
-        .appendField(new Blockly.FieldTextbutton(allowedBlock, function() {
+        .appendField(new Blockly.FieldLabel(allowedBlock, function() {
                     return this.sourceBlock_.toggleTargetBlock(this_input, allowedBlock);
                 }
         ), ddl_name);
@@ -76,7 +62,7 @@ Blockly.Input.prototype.appendArraySelector = function(schema, allowedBlocks, pr
     let appendKeyValuePairInput = function(rootInput, name) {
         var lastIndex = rootInput.length++;
         var appended_input = rootInput.appendValueInput('element_'+lastIndex);
-        appended_input.appendField(new Blockly.FieldTextbutton('–', function() { this.sourceBlock_.deleteElementInput(appended_input); }) )
+        appended_input.appendField(new Blockly.FieldLabel('–', function() { this.sourceBlock_.deleteElementInput(appended_input); }) )
             .appendField(new Blockly.FieldLabel(name), 'key_field_'+lastIndex)
             .appendField( Blockly.keyValueArrow() );
 
@@ -88,7 +74,7 @@ Blockly.Input.prototype.appendArraySelector = function(schema, allowedBlocks, pr
     if(allowedBlocks.length == 1){
         this
         .setAlign( this.type == Blockly.INPUT_VALUE ? Blockly.ALIGN_RIGHT : Blockly.ALIGN_LEFT)
-        .appendField(new Blockly.FieldTextbutton('+', function() {
+        .appendField(new Blockly.FieldLabel('+', function() {
                     //Need to spawn the new connector first, then attach this.
                     let tmp = appendKeyValuePairInput(this_input.sourceBlock_, allowedBlocks[0]);
                     return tmp.appendChild(allowedBlocks[0], Blockly.selectionArrow(), 'null');
@@ -127,7 +113,7 @@ Blockly.Input.prototype.appendOptionalFieldsSelector = function(schema, allowedB
     let appendKeyValuePairInput = function(rootInput, name) {
         var lastIndex = rootInput.length++;
         var appended_input = rootInput.appendValueInput('element_'+lastIndex);
-        appended_input.appendField(new Blockly.FieldTextbutton('–', function() { this.sourceBlock_.deleteKeyValuePairInput(appended_input); }) )
+        appended_input.appendField(new Blockly.FieldLabel('–', function() { this.sourceBlock_.deleteKeyValuePairInput(appended_input); }) )
             .appendField(new Blockly.FieldLabel(name), 'key_field_'+lastIndex)
             .appendField( Blockly.keyValueArrow() );
 
@@ -196,7 +182,9 @@ Blockly.Input.prototype.appendSelector = function(allowedBlocks, presenceLabel, 
 
 Blockly.Block.prototype.toggleTargetBlockCustom = function(input, targetType, workspace) {     // universal version: can create any type of targetBlocks
     var targetBlock = input ? this.getInputTargetBlock(input.name) : this.getNextBlock();      // named input or next  // add a new kind of block:
-    targetBlock = Blockly.Block.obtain(workspace, targetType);
+    targetBlock = workspace.getBlocksByType(targetType);
+    //TODO why are we getting an array now idk
+    console.log(target)
     targetBlock.initSvg();
     targetBlock.render();
     input.sourceBlock_.initSvg();
