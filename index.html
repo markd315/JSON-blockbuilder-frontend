@@ -27,6 +27,8 @@
 
 
     <script>
+        //Blockly.HSV_SATURATION = .85;
+        //Blockly.HSV_VALUE = .70;
         var serverConfig = {};
         var accessToken = undefined;
         var schema = {};
@@ -232,7 +234,8 @@
     </script>
     <style>
         body {
-            background-color: #fff;
+            background-color: #444;
+            workspaceBackgroundColour: #444;
             font-family: Times New roman;
         }
         h1 {
@@ -295,11 +298,28 @@
 
   <script>
 
+    let darkTheme = Blockly.Theme.defineTheme('darkMark', {
+            'base': Blockly.Themes.Classic,
+            'workspaceBackgroundColour': '#1e1e1e',
+            'toolboxBackgroundColour': 'blackBackground',
+            'toolboxForegroundColour': '#fff',
+            'flyoutBackgroundColour': '#252526',
+            'flyoutForegroundColour': '#ccc',
+            'flyoutOpacity': 1,
+            'scrollbarColour': '#797979',
+            'insertionMarkerColour': '#fff',
+            'insertionMarkerOpacity': 0.3,
+            'scrollbarOpacity': 0.4,
+            'cursorColour': '#d0d0d0',
+            'blackBackground': '#222',
+        });
+
 	Blockly.inject(document.getElementById('blocklyDiv'), {
         //rtl: true,
         toolbox: document.getElementById('toolbox'),
         media: 'media/',    // to avoid reaching to the web for icons
 		sound: false,
+        theme: Blockly.Themes.darkMark,
 		collapse: true, comments: true, disable: false, scrollbars: true, trashcan: true // those ones are automatically true when there are categories
 	});
 
