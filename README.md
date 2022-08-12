@@ -18,7 +18,7 @@ Universal Frontend makes it easy for your business analysts and any other low-te
 
 2. Make any changes you want to the `schema`s in the folder. You will also have to list the new blocks under one of the menu categories at `index.html:72`, and add the file to the validator registry at line `main.js:39` See the bullets below on the additional feature-driving fields this project adds to the `json-schema` standard.
 
-3. Install any missing dependencies `npm install`
+3. Install any missing dependencies `npm install` and make sure to do `npm install browserify -g` if you do not have browserify
 
 4. Rebuild any changes into the bundle with `browserify public/main.js -o public/bundle.js`. It is important to run this whenever you change `main.js` or any of the schema files.
 
@@ -26,7 +26,7 @@ Universal Frontend makes it easy for your business analysts and any other low-te
 
 6. Open `http://localhost:8080` in the browser (tested with chrome)
 
-
+i
 ### Schema Definitions
 
 The basic structure necessary is defined by [json schema](https://json-schema.org/draft/2020-12/json-schema-core.html). 
