@@ -22,8 +22,8 @@ Blockly.JSON.buildAndConnect = function(json_structure, parentConnection) {
 		else if(type == 'object') {
 			type = (json_structure instanceof Array) ? 'array' : 'dictionary';
 		}
-
-		var targetBlock = Blockly.Block.obtain(parentConnection.sourceBlock_.workspace, type);
+        let workspace = parentConnection.sourceBlock_.workspace
+		var targetBlock = workspace.newBlock(type);
 		targetBlock.initSvg();
 		targetBlock.render();
 

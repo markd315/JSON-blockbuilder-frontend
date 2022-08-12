@@ -228,7 +228,7 @@ Blockly.Block.prototype.toggleTargetBlock = function(input, targetType) {     //
         if(targetBlock) {   // Don't remove it, but return the "override" value to make sure the DDL is up to date:
             return targetBlock.type;
         } else {            // add a new kind of block:
-            targetBlock = Blockly.Block.obtain(Blockly.getMainWorkspace(), targetType);
+            targetBlock = Blockly.getMainWorkspace().newBlock(targetType);
             targetBlock.initSvg();
             targetBlock.render();
 
