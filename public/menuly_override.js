@@ -6,26 +6,10 @@
 
 var original_onMouseUp_ = Blockly.Block.prototype.onMouseUp_;
 
-Blockly.Block.prototype.onMouseUp_ = function(e) {
-    original_onMouseUp_.call(this, e);
-
-    if (Blockly.selected) {
-        var rootBlock = Blockly.selected.getRootBlock();
-
-        var isDisabled = (rootBlock.type != 'start');
-
-        var descendants = Blockly.selected.getDescendants();
-        for(var i in descendants) {
-            descendants[i].setDisabled(isDisabled);
-        }
-    }
-};
-
-
 Blockly.FieldDropdown.prototype.setValue = function(newValue) {      // Allow the label on the closed menu to differ from values of the open menu
   this.value_ = newValue;
   // Look up and display the human-readable text.
-  var options = this.getOptions_();
+  var options = this.getOptions();
   for(var x = 0; x < options.length; x++) {
     // Options are tuples of human-readable text and language-neutral values.
     if (options[x][1] == newValue) {
@@ -189,14 +173,10 @@ Blockly.Input.prototype.appendSelector = function(allowedBlocks, presenceLabel, 
     }
 
     var this_input = this;
-
+    console.log(dd_list);
     this//.setCheck(allowedBlocks)  // FIXME: we'll need to re-establish the connection rules somehow!
         .setAlign( this.type == Blockly.INPUT_VALUE ? Blockly.ALIGN_RIGHT : Blockly.ALIGN_LEFT)
-        .appendField(new Blockly.FieldDropdown( dd_list, function(targetType) {
-
-                    return this.sourceBlock_.toggleTargetBlock(this_input, targetType);
-                }
-        ), ddl_name);
+        .appendField(new Blockly.FieldDropdown(dd_list), ddl_name);
 
     return this;
 };
@@ -266,7 +246,7 @@ Blockly.Connection.prototype.getInput = function() {
 Blockly.Input.prototype.updateLinkedDDL = function() {
 
     var ddl_name    = 'ddl_'+this.name;
-    var ddl_field   = this.sourceBlock_.getField_(ddl_name);
+    var ddl_field   = this.sourceBlock_.getField(ddl_name);
     if(ddl_field) {
         var targetBlock = this.connection.targetBlock();
         var type = targetBlock ? targetBlock.type : ':NULL';
