@@ -114,7 +114,7 @@ Blockly.Input.prototype.appendOptionalFieldsSelector = function(schema, allowedB
     let appendKeyValuePairInput = function(rootInput, name) {
         var lastIndex = rootInput.length++;
         var appended_input = rootInput.appendValueInput('element_'+lastIndex);
-        appended_input.appendField(new Blockly.FieldTextbutton('–', function() { 
+        appended_input.appendField(new Blockly.FieldTextbutton('–', function() {
             this.sourceBlock_.deleteKeyValuePairInput(appended_input);
             updateJSONarea();
         }) )

@@ -213,7 +213,10 @@ global.loadFromStorage = function() {
     const workspace = Blockly.getMainWorkspace();
     console.log(workspace);
     console.log(Blockly);
-    Blockly.JSON.toWorkspace(program, workspace);
+    let dfsArrTxt = localStorage.getItem("json-frontend-savedmetadata");
+    let dfsMemo = dfsArrTxt.split(",")
+    console.log(dfsMemo);
+    Blockly.JSON.toWorkspace(program, workspace, dfsMemo);
 }
 
 global.sendSingleRequest = function (requestType, payload, type, propertyOrParent, routePrefix, block){ //if last param undefined, this is a parent request.
@@ -325,6 +328,18 @@ global.constructFullRoute = function(routePrefix, blockIn) {
     return fullRoute;
 }
 
+global.dfsRootBlockTypes = function(block, writeback, isRoot){
+    writeback.push(block.type);
+    console.log(block.type);
+    console.log(block);
+    for(childIdx in block.childBlocks_){
+        dfsRootBlockTypes(block.childBlocks_[childIdx], writeback, false);
+    }
+    if(isRoot){
+        return writeback;
+    }
+}
+
 
 global.updateJSONarea = function () {
     //TODO none of the AJV schema validations currently work for deeply nested objects, may need to apply recursive techniques to add that.
@@ -371,8 +386,11 @@ global.updateJSONarea = function () {
                 }
             }
         }
-        if(json.length > 200){
+        if(json.length > 20){
             localStorage.setItem("json-frontend-savedstate", json);
+            writeback = []
+            writeback = localStorage.setItem("json-frontend-savedmetadata", dfsRootBlockTypes(rootBlock, writeback, true));
+            console.log(writeback);
         }
     }
 }

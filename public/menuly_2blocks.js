@@ -1,15 +1,18 @@
 'use strict';
 
-Blockly.JSON.toWorkspace = function(json_text, workspace) {
+
+var dfsIdx = 0;
+Blockly.JSON.toWorkspace = function(json_text, workspace, dfsMemo) {
 	var json_structure  = JSON.parse(json_text);
 	workspace.clear();
 	var startBlock = workspace.newBlock('start');
 	startBlock.initSvg();
 	startBlock.render();
-	Blockly.JSON.buildAndConnect(json_structure, startBlock.getInput('json').connection);
+	dfsIdx = 0;
+	Blockly.JSON.buildAndConnect(json_structure, startBlock.getInput('json').connection, dfsMemo);
 };
 
-Blockly.JSON.buildAndConnect = function(json_structure, parentConnection) {
+Blockly.JSON.buildAndConnect = function(json_structure, parentConnection, dfsMemo) {
 	if(json_structure === null) {
 		return;
 	} else {
@@ -20,15 +23,15 @@ Blockly.JSON.buildAndConnect = function(json_structure, parentConnection) {
 			type = (json_structure instanceof Array) ? 'dynarray' : 'dictionary';
 		}
         let workspace = parentConnection.sourceBlock_.workspace
-		var targetBlock = workspace.newBlock(type);
+		var targetBlock = workspace.newBlock(dfsMemo[dfsIdx]);
+		dfsIdx+=1;
 		targetBlock.initSvg();
 		targetBlock.render();
 
 		var childConnection = targetBlock.outputConnection;
 		parentConnection.connect(childConnection);
 
-		switch(type) {
-
+		switch(targetBlock.type) {
 			case 'string':
 				targetBlock.setFieldValue( String(json_structure), 'string_value' );
 				break;
@@ -51,6 +54,15 @@ Blockly.JSON.buildAndConnect = function(json_structure, parentConnection) {
 			case 'dynarray':
 				for(var i in json_structure) {
 					targetBlock.appendElementInput();
+					var elementConnection = targetBlock.getInput('element_'+i).connection;
+					Blockly.JSON.buildAndConnect(json_structure[i], elementConnection);
+				}
+				break;
+			default:
+			    console.log("retrieing custom block");
+			    for(var i in json_structure) {
+			        console.log(targetBlock);
+					targetBlock.appendKeyValuePairInput();
 					var elementConnection = targetBlock.getInput('element_'+i).connection;
 					Blockly.JSON.buildAndConnect(json_structure[i], elementConnection);
 				}
