@@ -38,9 +38,6 @@ Blockly.Input.prototype.appendChild = function(allowedBlock, presenceLabel, abse
                     return this.sourceBlock_.toggleTargetBlock(this_input, allowedBlock);
                 }
         ), ddl_name);
-    console.log(this);
-    console.log(this.sourceBlock_);
-    console.log(this.sourceBlock_.workspace)
     this_input.sourceBlock_.toggleTargetBlockCustom(this_input, allowedBlock, this.sourceBlock_.workspace);
     return this;
 };
@@ -79,12 +76,8 @@ Blockly.Input.prototype.appendArraySelector = function(schema, allowedBlocks, pr
         .setAlign( this.type == Blockly.INPUT_VALUE ? Blockly.ALIGN_RIGHT : Blockly.ALIGN_LEFT)
         .appendField(new Blockly.FieldTextbutton('+', function() {
                     //Need to spawn the new connector first, then attach this.
-                    console.log(this_input);
-                    console.log(allowedBlocks);
-                    console.log(this_input.sourceBlock_);
                     let tmp = appendKeyValuePairInput(this_input.sourceBlock_, allowedBlocks[0]);
                     let appended = tmp.appendChild(allowedBlocks[0], Blockly.selectionArrow(), 'null');
-                    console.log(tmp);
                     return appended;
                 }
         ), ddl_name);
@@ -179,7 +172,6 @@ Blockly.Input.prototype.appendSelector = function(allowedBlocks, presenceLabel, 
     }
 
     var this_input = this;
-    console.log(dd_list);
     this//.setCheck(allowedBlocks)  // FIXME: we'll need to re-establish the connection rules somehow!
         .setAlign( this.type == Blockly.INPUT_VALUE ? Blockly.ALIGN_RIGHT : Blockly.ALIGN_LEFT)
         .appendField(new Blockly.FieldDropdown( dd_list, function(targetType) {
@@ -204,18 +196,13 @@ Blockly.Block.prototype.toggleTargetBlockCustom = function(input, targetType, wo
     var parentConnection = input ? this.getInput(input.name).connection : this.nextConnection;     // named input or next
     var childConnection = targetBlock.outputConnection || targetBlock.previousConnection;  // vertical or horizontal
     parentConnection.connect(childConnection);
-    console.log(parentConnection);
-    console.log(childConnection);
     const reqFields = input.sourceBlock_.inputList;
-    console.log(input.sourceBlock_);
     const schemaName = input.sourceBlock_.type;
     const propertyName = input.fieldRow[0].text_;
-    console.log(schemaName);
     var property = "tmp"
     const lib = getSchemaLibrary()
     if(schemaName in lib){
         const schema_def = lib[schemaName]
-        console.log(schema_def)
         property = schema_def.properties[propertyName];
     }else{
         property = "-"
