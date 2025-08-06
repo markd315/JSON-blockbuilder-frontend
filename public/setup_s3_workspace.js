@@ -184,4 +184,15 @@ window.addEventListener('load', function() {
         const blockLoader = new DynamicBlockLoader();
         blockLoader.initialize();
     }, 100);
-}); 
+});
+
+const schemaLoader = new DynamicBlockLoader();
+
+// Export the two methods
+export async function loadSchemas() {
+  return schemaLoader.loadSchemas();
+}
+
+export async function loadSchemaDetails() {
+  return schemaLoader.loadSchemaDetails();
+}

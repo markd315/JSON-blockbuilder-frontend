@@ -1,4 +1,7 @@
 'use strict';
+import { loadSchemas, loadSchemaDetails } from './setup_s3_workspace.js';
+
+
 
 // Modern Blockly generator definition
 const jsonGenerator = new Blockly.Generator('JSON');
@@ -22,47 +25,49 @@ jsonGenerator.generalBlockToObj = function(block) {
     }
 };
 
-//TODO add additional validations for these custom schemas later.
-function loadCustomSchemaMappers(){
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      const regex = /<li><a href=\"\/schema\/(.*?).json\"/gm;
-      let m;
-      while ((m = regex.exec(this.responseText)) !== null) {
-        // This is necessary to avoid infinite loops with zero-width matches
-        if (m.index === regex.lastIndex) {
-          regex.lastIndex++;
-        }
-        // The result can be accessed through the `m`-variable.
-        m.forEach((match, groupIndex) => {
-          if(groupIndex == 1){
-            jsonGenerator.forBlock[match] = function(block) {
-                var dictionary = {};
-                for(var i = 0; i<block.length; i++) {
-                    var pair_key    = block.getFieldValue( 'key_field_'+i );
-                    var pair_value  = this.generalBlockToObj( block.getInputTargetBlock( 'element_'+i ) );
-                    dictionary[pair_key] = pair_value;
-                }
-                return dictionary;
-            };
-            jsonGenerator.forBlock[match + '_array'] = function(block) {
-                var array = [];
-                for(var i = 0; i<block.length; i++) {
-                    var element_value  = this.generalBlockToObj( block.getInputTargetBlock( 'element_'+i ) );
-                    array[i] = element_value;
-                }
-                return array;
-            };
-          }
-        });
-      }
+async function loadCustomSchemaMappers() {
+    const ok = await loadSchemas();
+    if (!ok) {
+        console.error('Could not load schema list – aborting mappers.');
+        return;
     }
-  };
-  xhttp.open("GET", '/schema/', true);
-  xhttp.send();
+
+    // 2) Fetch each schema’s JSON
+    const schemaDetails = await loadSchemaDetails();
+
+    // 3) Build the same jsonGenerator.forBlock[...] functions
+    schemaDetails.forEach(({ filename, schema }) => {
+        // strip .json
+        const name = filename.replace(/\.json$/, '');
+
+        // object mapper
+        jsonGenerator.forBlock[name] = function(block) {
+        const dictionary = {};
+        for (let i = 0; i < block.length; i++) {
+            const key   = block.getFieldValue(`key_field_${i}`);
+            const value = this.generalBlockToObj(
+            block.getInputTargetBlock(`element_${i}`)
+            );
+            dictionary[key] = value;
+        }
+        return dictionary;
+        };
+
+        // array mapper
+        jsonGenerator.forBlock[`${name}_array`] = function(block) {
+        const arr = [];
+        for (let i = 0; i < block.length; i++) {
+            arr[i] = this.generalBlockToObj(
+            block.getInputTargetBlock(`element_${i}`)
+            );
+        }
+        return arr;
+        };
+    });
 }
+  
 loadCustomSchemaMappers();
+  
 //-------------------------------------------------------------------------------------------------
 jsonGenerator.fromWorkspace = function(workspace) {
     var json_text = '';
