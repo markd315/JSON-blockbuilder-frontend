@@ -32,12 +32,9 @@ async function loadCustomSchemaMappers() {
         return;
     }
 
-    // 2) Fetch each schema’s JSON
     const schemaDetails = await loadSchemaDetails();
 
-    // 3) Build the same jsonGenerator.forBlock[...] functions
     schemaDetails.forEach(({ filename, schema }) => {
-        // strip .json
         const name = filename.replace(/\.json$/, '');
 
         // object mapper
@@ -65,7 +62,7 @@ async function loadCustomSchemaMappers() {
         };
     });
 }
-  
+
 loadCustomSchemaMappers();
   
 //-------------------------------------------------------------------------------------------------
