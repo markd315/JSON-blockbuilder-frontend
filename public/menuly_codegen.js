@@ -92,7 +92,7 @@ class S3BlockLoader {
         let name = schema.title || schema.$id || 'custom';
         return name.toLowerCase().replace(/[^a-z0-9]/g, '_');
     }
-
+    
     getColorFromSchema(schema) {
         const title = schema.title || 'custom';
         let hash = 0;
@@ -101,28 +101,27 @@ class S3BlockLoader {
         }
         return Math.abs(hash) % 360;
     }
-
+    
     updateToolbox() {
         const toolbox = document.getElementById('toolbox');
         const custom = toolbox?.querySelector('#custom-objects');
         const customArrays = toolbox?.querySelector('#custom-arrays');
-
+    
         if (!custom || !customArrays) {
             console.error('Toolbox structure missing.');
             return;
         }
-
+    
         custom.innerHTML = '';
         customArrays.innerHTML = '';
-
-        this.schemas.forEach(schemaFile => {
-            const baseName = schemaFile.replace('.json', '');
-            const blockName = this.getBlockName({ title: baseName });
-
+    
+        this.schemaDetails.forEach(({ schema }) => {
+            const blockName = this.getBlockName(schema);
+    
             const blockEl = document.createElement('block');
             blockEl.setAttribute('type', blockName);
             custom.appendChild(blockEl);
-
+    
             const arrayBlock = document.createElement('block');
             arrayBlock.setAttribute('type', `${blockName}_array`);
             customArrays.appendChild(arrayBlock);
@@ -174,15 +173,6 @@ jsonGenerator.generalBlockToObj = function(block) {
     return null;
 };
 
-jsonGenerator.fromWorkspace = function(workspace) {
-    return workspace.getTopBlocks(false)
-        .filter(b => b.type === 'start')
-        .map(b => this.generalBlockToObj(b))
-        .map(obj => JSON.stringify(obj, null, 4))
-        .join('\n\n');
-};
-
-jsonGenerator.fromWorkspaceStructure = jsonGenerator.fromWorkspace;
 
 jsonGenerator.forBlock['start'] = function(block) {
     return this.generalBlockToObj(block.getInputTargetBlock('json')) || null;
@@ -228,12 +218,20 @@ jsonGenerator.forBlock['dynarray'] = function(block) {
     };
 });
 
-Blockly.JSON = jsonGenerator;
-
-//------------------------------ Bootstrapping on Page Load ----------------------------------------//
-
 window.addEventListener('load', () => {
     setTimeout(() => {
         new S3BlockLoader().initialize();
     }, 100);
 });
+
+Blockly.JSON = jsonGenerator;
+
+jsonGenerator.fromWorkspace = function(workspace) {
+    return workspace.getTopBlocks(false)
+        .filter(b => b.type === 'start')
+        .map(b => this.generalBlockToObj(b))
+        .map(obj => JSON.stringify(obj, null, 4))
+        .join('\n\n');
+};
+
+jsonGenerator.fromWorkspaceStructure = jsonGenerator.fromWorkspace;
