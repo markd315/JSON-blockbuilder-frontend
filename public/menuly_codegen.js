@@ -115,7 +115,7 @@ class S3BlockLoader {
         custom.innerHTML = '';
         customArrays.innerHTML = '';
     
-        this.schemaDetails.forEach(({ schema }) => {
+        this.schemas.forEach(({ schema }) => {
             const blockName = this.getBlockName(schema);
     
             const blockEl = document.createElement('block');
