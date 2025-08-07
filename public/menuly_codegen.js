@@ -1,6 +1,86 @@
 'use strict';
 
+//---------------------------------- Blockly Generator Setup --------------------------------------//
+
 const jsonGenerator = new Blockly.Generator('JSON');
+
+jsonGenerator.scrub_ = function(block, code, thisOnly) {
+    return code;
+};
+
+jsonGenerator.generalBlockToObj = function(block) {
+    if (block) {
+        const fn = this.forBlock[block.type];
+        if (fn) {
+            return fn.call(this, block);
+        } else {
+            console.warn(`No generator for block type '${block.type}'`);
+        }
+    }
+    return null;
+};
+
+// Core block generators (defined upfront)
+jsonGenerator.forBlock['start'] = function(block) {
+    return this.generalBlockToObj(block.getInputTargetBlock('json')) || {};
+};
+
+jsonGenerator.forBlock['boolean'] = function(block) {
+    return block.getFieldValue('boolean') === 'true';
+};
+
+jsonGenerator.forBlock['string'] = function(block) {
+    return block.getFieldValue('string_value');
+};
+
+jsonGenerator.forBlock['number'] = function(block) {
+    return Number(block.getFieldValue('number_value'));
+};
+
+jsonGenerator.forBlock['dictionary'] = function(block) {
+    const obj = {};
+    for (let i = 0; i < block.length; i++) {
+        const key = block.getFieldValue(`key_field_${i}`);
+        const val = this.generalBlockToObj(block.getInputTargetBlock(`element_${i}`));
+        obj[key] = val;
+    }
+    return obj;
+};
+
+jsonGenerator.forBlock['dynarray'] = function(block) {
+    const arr = [];
+    for (let i = 0; i < block.length; i++) {
+        arr[i] = this.generalBlockToObj(block.getInputTargetBlock(`element_${i}`));
+    }
+    return arr;
+};
+
+// Array generators for primitive types
+['string_array', 'number_array', 'boolean_array'].forEach(type => {
+    jsonGenerator.forBlock[type] = function(block) {
+        const arr = [];
+        for (let i = 0; i < block.length; i++) {
+            arr[i] = this.generalBlockToObj(block.getInputTargetBlock(`element_${i}`));
+        }
+        return arr;
+    };
+});
+
+// Make generator globally available
+Blockly.JSON = jsonGenerator;
+
+// Utility functions for workspace operations
+jsonGenerator.fromWorkspace = function(workspace) {
+    return workspace.getTopBlocks(false)
+        .filter(b => b.type === 'start')
+        .map(b => this.generalBlockToObj(b))
+        .map(obj => JSON.stringify(obj, null, 4))
+        .join('\n\n');
+};
+
+jsonGenerator.fromWorkspaceStructure = jsonGenerator.fromWorkspace;
+
+//---------------------------------- S3 Block Loader --------------------------------------//
 
 class S3BlockLoader {
     constructor() {
@@ -29,40 +109,25 @@ class S3BlockLoader {
         }
     }
 
-    async initialize() {
-        console.log(`Initializing dynamic blocks for tenant: ${this.tenantId}`);
-
-        const ok = await this.loadSchemas();
-        if (!ok) {
-            console.warn('Falling back to default blocks.');
-            this.initializeBlockly();
-            return;
+    getBlockName(schema) {
+        let name = schema.title || schema.$id || 'custom';
+        return name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    }
+    
+    getColorFromSchema(schema) {
+        const title = schema.title || 'custom';
+        let hash = 0;
+        for (let i = 0; i < title.length; i++) {
+            hash = title.charCodeAt(i) + ((hash << 5) - hash);
         }
+        return Math.abs(hash) % 360;
+    }
 
-        const schemaDetails = await Promise.all(
-            this.schemas.map(async (schemaFile) => {
-                try {
-                    const res = await fetch(`/schema/${schemaFile}`);
-                    if (res.ok) {
-                        const schema = await res.json();
-                        return { filename: schemaFile, schema };
-                    }
-                } catch (err) {
-                    console.error(`Failed loading ${schemaFile}:`, err);
-                }
-                return null;
-            })
-        );
-
+    // Register dynamic mappers for schema-based blocks
+    registerDynamicMappers(schemaDetails) {
         schemaDetails.filter(Boolean).forEach(({ filename, schema }) => {
             const name = this.getBlockName(schema);
-            schema.color ||= this.getColorFromSchema(schema);
-
-            // Register dynamic block if handler available
-            if (typeof window.addBlockFromSchema === 'function') {
-                window.addBlockFromSchema(name, schema);
-            }
-
+            
             // Register object mapper
             jsonGenerator.forBlock[name] = function (block) {
                 const dict = {};
@@ -83,28 +148,9 @@ class S3BlockLoader {
                 return arr;
             };
         });
-
-        this.updateToolbox();
-        this.initializeBlockly();
-    }
-
-    getBlockName(schema) {
-        console.log('naming');
-        let name = schema.title || schema.$id || 'custom';
-        console.log(name);
-        return name.toLowerCase().replace(/[^a-z0-9]/g, '_');
     }
     
-    getColorFromSchema(schema) {
-        const title = schema.title || 'custom';
-        let hash = 0;
-        for (let i = 0; i < title.length; i++) {
-            hash = title.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return Math.abs(hash) % 360;
-    }
-    
-    updateToolbox() {
+    updateToolbox(schemaDetails) {
         const toolbox = document.getElementById('toolbox');
         const custom = toolbox?.querySelector('#custom-objects');
         const customArrays = toolbox?.querySelector('#custom-arrays');
@@ -117,9 +163,7 @@ class S3BlockLoader {
         custom.innerHTML = '';
         customArrays.innerHTML = '';
     
-        this.schemas.forEach(({ schema }) => {
-            console.log('schema');
-            console.log(schema);
+        schemaDetails.filter(Boolean).forEach(({ schema }) => {
             const blockName = this.getBlockName(schema);
     
             const blockEl = document.createElement('block');
@@ -157,82 +201,56 @@ class S3BlockLoader {
             if (kb) kb.setWorkspace(workspace);
         }
     }
+
+    async initialize() {
+        console.log(`Initializing dynamic blocks for tenant: ${this.tenantId}`);
+
+        const ok = await this.loadSchemas();
+        if (!ok) {
+            console.warn('Falling back to default blocks.');
+            this.initializeBlockly();
+            return;
+        }
+
+        // Load all schema details
+        const schemaDetails = await Promise.all(
+            this.schemas.map(async (schemaFile) => {
+                try {
+                    const res = await fetch(`/schema/${schemaFile}`);
+                    if (res.ok) {
+                        const schema = await res.json();
+                        return { filename: schemaFile, schema };
+                    }
+                } catch (err) {
+                    console.error(`Failed loading ${schemaFile}:`, err);
+                }
+                return null;
+            })
+        );
+
+        // Register dynamic blocks and mappers
+        schemaDetails.filter(Boolean).forEach(({ filename, schema }) => {
+            const name = this.getBlockName(schema);
+            schema.color ||= this.getColorFromSchema(schema);
+
+            // Register dynamic block if handler available
+            if (typeof window.addBlockFromSchema === 'function') {
+                window.addBlockFromSchema(name, schema);
+            }
+        });
+
+        // Register mappers AFTER all schemas are loaded
+        this.registerDynamicMappers(schemaDetails);
+        
+        // Update toolbox AFTER mappers are registered
+        this.updateToolbox(schemaDetails);
+        
+        // Initialize Blockly LAST
+        this.initializeBlockly();
+    }
 }
 
-//---------------------------------- Blockly Generator Setup --------------------------------------//
-
-jsonGenerator.scrub_ = function(block, code, thisOnly) {
-    return code;
-};
-
-jsonGenerator.generalBlockToObj = function(block) {
-    if (block) {
-        const fn = this.forBlock[block.type];
-        if (fn) {
-            return fn.call(this, block);
-        } else {
-            console.warn(`No generator for block type '${block.type}'`);
-        }
-    }
-    return null;
-};
-
-
-jsonGenerator.forBlock['start'] = function(block) {
-    return this.generalBlockToObj(block.getInputTargetBlock('json')) || null;
-};
-
-jsonGenerator.forBlock['boolean'] = function(block) {
-    return block.getFieldValue('boolean') === 'true';
-};
-
-jsonGenerator.forBlock['string'] = function(block) {
-    return block.getFieldValue('string_value');
-};
-
-jsonGenerator.forBlock['number'] = function(block) {
-    return Number(block.getFieldValue('number_value'));
-};
-
-jsonGenerator.forBlock['dictionary'] = function(block) {
-    const obj = {};
-    for (let i = 0; i < block.length; i++) {
-        const key = block.getFieldValue(`key_field_${i}`);
-        const val = this.generalBlockToObj(block.getInputTargetBlock(`element_${i}`));
-        obj[key] = val;
-    }
-    return obj;
-};
-
-jsonGenerator.forBlock['dynarray'] = function(block) {
-    const arr = [];
-    for (let i = 0; i < block.length; i++) {
-        arr[i] = this.generalBlockToObj(block.getInputTargetBlock(`element_${i}`));
-    }
-    return arr;
-};
-
-['string_array', 'number_array', 'boolean_array'].forEach(type => {
-    jsonGenerator.forBlock[type] = function(block) {
-        const arr = [];
-        for (let i = 0; i < block.length; i++) {
-            arr[i] = this.generalBlockToObj(block.getInputTargetBlock(`element_${i}`));
-        }
-        return arr;
-    };
-});
-
-Blockly.JSON = jsonGenerator;
-
-jsonGenerator.fromWorkspace = function(workspace) {
-    return workspace.getTopBlocks(false)
-        .filter(b => b.type === 'start')
-        .map(b => this.generalBlockToObj(b))
-        .map(obj => JSON.stringify(obj, null, 4))
-        .join('\n\n');
-};
-
-jsonGenerator.fromWorkspaceStructure = jsonGenerator.fromWorkspace;
+//---------------------------------- Initialization --------------------------------------//
 
 window.addEventListener('load', () => {
     setTimeout(() => {
