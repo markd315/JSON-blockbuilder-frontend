@@ -222,12 +222,6 @@ jsonGenerator.forBlock['dynarray'] = function(block) {
     };
 });
 
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        new S3BlockLoader().initialize();
-    }, 100);
-});
-
 Blockly.JSON = jsonGenerator;
 
 jsonGenerator.fromWorkspace = function(workspace) {
@@ -239,3 +233,9 @@ jsonGenerator.fromWorkspace = function(workspace) {
 };
 
 jsonGenerator.fromWorkspaceStructure = jsonGenerator.fromWorkspace;
+
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        new S3BlockLoader().initialize();
+    }, 100);
+});
