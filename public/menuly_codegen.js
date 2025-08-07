@@ -89,7 +89,9 @@ class S3BlockLoader {
     }
 
     getBlockName(schema) {
+        console.log('naming');
         let name = schema.title || schema.$id || 'custom';
+        console.log(name);
         return name.toLowerCase().replace(/[^a-z0-9]/g, '_');
     }
     
@@ -116,6 +118,8 @@ class S3BlockLoader {
         customArrays.innerHTML = '';
     
         this.schemas.forEach(({ schema }) => {
+            console.log('schema');
+            console.log(schema);
             const blockName = this.getBlockName(schema);
     
             const blockEl = document.createElement('block');
