@@ -390,7 +390,7 @@ class S3BlockLoader {
                 try {
                     // Create a clean schema for validation (without Blockly-specific properties)
                     const cleanSchema = { ...schema };
-                    const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent', '_displayTitle'];
+                    const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent', '_displayTitle', 'format'];
                     blocklyProperties.forEach(prop => {
                         if (prop in cleanSchema) {
                             delete cleanSchema[prop];
@@ -926,7 +926,7 @@ class S3BlockLoader {
                         if (!cleanSchema) {
                             console.warn(`Clean schema not found in library for ${name}, creating fallback`);
                             cleanSchema = { ...schema };
-                            const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent'];
+                            const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent', 'format'];
                             blocklyProperties.forEach(prop => {
                                 if (prop in cleanSchema) {
                                     delete cleanSchema[prop];
