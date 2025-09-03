@@ -7627,7 +7627,7 @@ global.checkSchemaForBlocklyProps = function(schemaName) {
     
     let schema = ajv.getSchema(schemaKey) || ajv.getSchema(schemaKeyAlt);
     if (schema) {
-        const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent'];
+        const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent', 'format', 'uri'];
         const foundProps = blocklyProperties.filter(prop => prop in schema);
         if (foundProps.length > 0) {
             console.warn(`WARNING: Schema ${schemaName} in AJV contains Blockly properties:`, foundProps);
@@ -7741,7 +7741,7 @@ global.addSchemaToValidator = function(schemaName, schema) {
         }
         
         // Remove Blockly-specific properties and invalid JSON Schema keywords
-        const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent', 'stringify'];
+        const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent', 'stringify', 'format', 'uri'];
         blocklyProperties.forEach(prop => {
             if (prop in cleanSchema) {
                 delete cleanSchema[prop];
@@ -8316,7 +8316,6 @@ module.exports={
 	"client_secret": "secret",
 	"user": "basic_user",
 	"pass": "basic_pass",
-	"corsProxy": "https://cors-anywhere.herokuapp.com/",
 	"mockResponses": true
 }
 },{}]},{},[85]);

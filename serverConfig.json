@@ -6,6 +6,5 @@
 	"client_secret": "secret",
 	"user": "basic_user",
 	"pass": "basic_pass",
-	"corsProxy": "https://cors-anywhere.herokuapp.com/",
 	"mockResponses": true
 }

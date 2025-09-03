@@ -142,7 +142,7 @@ function addBlockFromSchema(name, schema) {
   
   // Remove Blockly-specific properties from the clean schema for validation
   // Note: 'title' and 'description' are valid JSON Schema properties, so we keep those
-  const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent', 'stringify', 'format'];
+  const blocklyProperties = ['color', 'apiCreationStrategy', 'endpoint', 'childRefToParent', 'stringify', 'format', 'uri'];
   blocklyProperties.forEach(prop => {
     if (prop in cleanSchema) {
       delete cleanSchema[prop];

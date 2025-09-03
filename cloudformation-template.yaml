@@ -281,8 +281,7 @@ Resources:
       RestApiId: !Ref ApiGateway
       ResourceId: !Ref ApiGatewayResourceJson
       HttpMethod: POST
-      AuthorizationType: CUSTOM
-      AuthorizerId: !Ref ApiGatewayAuthorizer
+      AuthorizationType: NONE
       Integration:
         Type: AWS
         IntegrationHttpMethod: POST

@@ -1,5 +1,5 @@
 {
-    "title": "Single Field Properties",
+    "title": "Field",
     "$schema": "https://json-schema.org/draft/2019-09/schema",
     "$id": "fieldproperties.json",
     "$recursiveAnchor": true,
@@ -13,7 +13,7 @@
         "$ref": {
             "description": "Dynamic schema type for the field (required if type is not provided)",
             "type": "$ref",
-            "$ref": "itemsType.json"
+            "$ref": "itemstype.json"
         },
         "enum": {
             "description": "Enum accepted values for the field",
