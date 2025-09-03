@@ -17,6 +17,10 @@ bucket_name = os.environ['BUCKET_NAME']
 def lambda_handler(event, context):
     """Main Lambda handler for JSON Block Builder API"""
     try:
+        # Handle CORS preflight requests
+        if event.get('httpMethod') == 'OPTIONS':
+            return create_response(200, {'message': 'CORS preflight'})
+        
         # Check if this is an authorizer request
         if 'type' in event and event['type'] == 'TOKEN':
             return handle_authorizer(event)
@@ -106,7 +110,10 @@ def create_response(status_code, body):
         'statusCode': status_code,
         'headers': {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token',
+            'Access-Control-Max-Age': '86400'
         },
         'body': json.dumps(body)
     }
