@@ -18,6 +18,10 @@ Parameters:
     Type: String
     Default: vpc-fc7ecc86
     Description: VPC ID
+  OpenAIApiKey:
+    Type: String
+    NoEcho: true
+    Description: OpenAI API Key for LLM schema generation
 
 Resources:
   # DynamoDB Table for user management
@@ -118,6 +122,7 @@ Resources:
       Environment:
         Variables:
           BUCKET_NAME: !Ref UniversalFrontendBucket
+          OPENAI_API_KEY: !Ref OpenAIApiKey
       Timeout: 30
 
   # EC2 Instance

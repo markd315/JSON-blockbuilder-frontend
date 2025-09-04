@@ -8310,7 +8310,7 @@ global.updateJSONarea = function (workspace) {
 },{"../serverConfig.json":86,"ajv/dist/2019":1}],86:[function(require,module,exports){
 module.exports={
 	"baseUrl": "http://dummy.restapiexample.com/api/v1",
-	"authType": "client_credentials",
+	"authType": "none",
 	"authorizationServer": "https://demo.identityserver.io/connect/token",
 	"client_id": "m2m",
 	"client_secret": "secret",
