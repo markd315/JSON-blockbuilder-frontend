@@ -7,7 +7,9 @@ import hmac
 import base64
 import secrets
 import string
-import requests
+import urllib.request
+import urllib.parse
+import urllib.error
 
 # Initialize AWS clients
 dynamodb = boto3.resource('dynamodb')
@@ -387,6 +389,9 @@ Requirements:
 6. Use enums for limited choices
 6. Add color property (0-360) for visual representation
 7. Return ONLY the JSON schema, no explanations or markdown
+8. Use $ref for references to subobjects using the id of other schemas within this request.
+9. Use type array and $ref inside of items for references to a LIST of subobjects using the id of other schemas within this request.
+10. Guess which fields should be required IF NOT PROVIDED by the user.
 
 Example format:
 {
@@ -397,12 +402,24 @@ Example format:
   "type": "object",
   "color": 120,
   "properties": {
-    "name": {
-      "type": "string",
-      "description": "The name of the item"
+    "flightRoutes": {
+      "description": "List of flight routes (minimum 1 required)",
+      "type": "array",
+      "items": {
+        "$ref": "flightRoute.json"
+      },
+      "minItems": 1
+    },
+    "brandLink": {
+      "description": "Brand link/URL",
+      "type": "string"
+    },
+    "hub": {
+      "description": "Primary hub airport",
+      "$ref": "airport.json"
     }
   },
-  "required": ["name"]
+  "required": ["hub"]
 }"""
 
     user_prompt = f"Convert this description to JSON Schema: {description}"
@@ -422,17 +439,28 @@ Example format:
         'temperature': 0.3
     }
     
-    response = requests.post(
+    # Convert payload to JSON bytes
+    data = json.dumps(payload).encode('utf-8')
+    
+    # Create request
+    req = urllib.request.Request(
         'https://api.openai.com/v1/chat/completions',
+        data=data,
         headers=headers,
-        json=payload,
-        timeout=30
+        method='POST'
     )
     
-    if response.status_code != 200:
-        raise Exception(f"OpenAI API error: {response.status_code} - {response.text}")
-    
-    result = response.json()
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            if response.status != 200:
+                raise Exception(f"OpenAI API error: {response.status} - {response.read().decode()}")
+            
+            result = json.loads(response.read().decode())
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode() if e.fp else "Unknown error"
+        raise Exception(f"OpenAI API HTTP error: {e.code} - {error_body}")
+    except urllib.error.URLError as e:
+        raise Exception(f"OpenAI API URL error: {str(e)}")
     
     if 'choices' not in result or len(result['choices']) == 0:
         raise Exception("No response from OpenAI API")

@@ -117,6 +117,9 @@ Resources:
           import bcrypt
           import os
           from datetime import datetime, timedelta
+          import urllib3
+          import urllib.request
+          import urllib.parse
           
           print("insert the rest of the code manually for now lol")
       Environment:

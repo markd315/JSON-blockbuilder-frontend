@@ -205,3 +205,15 @@
       ]
   }
 }
+
+
+{
+  "type": "llm",
+  "body": {
+    "extension": "airline",
+    "schema": [
+      "An airplane. The airplane must have a name, a pilot name, a weight, a gender, and a list with exactly two wings.",
+      "A wing for the airplane. The wing must have a length, and a side. Side is an enum of string: either left or right."
+      ]
+  }
+}
