@@ -457,6 +457,7 @@ class S3BlockLoader {
             disable: false,
             scrollbars: true,
             trashcan: true,
+            theme: Blockly.Themes.Dark, // Default to dark theme
         });
 
         const startBlock = workspace.newBlock('start');
